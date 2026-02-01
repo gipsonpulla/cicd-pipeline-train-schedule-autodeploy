@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    environment {
-        //be sure to replace "gipsonpulla" with your own Docker Hub username
-        DOCKER_IMAGE_NAME = "gipson1986/train-schedule"
-    }
     stages {
         stage('Build') {
             steps {
@@ -18,9 +14,9 @@ pipeline {
             }
             steps {
                 script {
-                    app = docker.build(DOCKER_IMAGE_NAME)
+                    app = docker.build("<DOCKER_HUB_USERNAME>/train-schedule")
                     app.inside {
-                        sh 'echo Hello, World!'
+                        sh 'echo $(curl localhost:8080)'
                     }
                 }
             }
@@ -38,21 +34,8 @@ pipeline {
                 }
             }
         }
-        stage('CanaryDeploy') {
-            when {
-                branch 'master'
-            }
-            environment { 
-                CANARY_REPLICAS = 1
-            }
-            steps {
-                kubernetesDeploy(
-                    kubeconfigId: 'kubeconfig',
-                    configs: 'train-schedule-kube-canary.yml',
-                    enableConfigSubstitution: true
-                )
-            }
-        }
+    }   
+}
         stage ('DeployToProduction') {
     when {
         branch 'master'
